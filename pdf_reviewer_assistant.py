@@ -25,7 +25,7 @@ def extract_text_from_pdf(path):
 # -----------------------------
 # Step 2: Chunk text if needed
 # -----------------------------
-def chunk_text(text, max_tokens=12000, model="gpt-4o"):
+def chunk_text(text, max_tokens=12000, model="gpt-4o-mini"):
     encoding = tiktoken.encoding_for_model(model)
     tokens = encoding.encode(text)
     chunks = []
@@ -105,7 +105,7 @@ tools = [
 # -----------------------------
 # Step 4: Review one chunk (with tool support)
 # -----------------------------
-def review_text_chunk(chunk, model="gpt-4o"):
+def review_text_chunk(chunk, model="gpt-4o-mini"):
     system_prompt = """
     You are an expert AI research reviewer. Read the given chunk of a research paper and highlight weak arguments, unsupported claims, or flawed methodology.
 
