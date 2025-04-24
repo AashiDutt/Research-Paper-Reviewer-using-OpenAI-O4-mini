@@ -1,36 +1,48 @@
+
 ### Chunk 1 Review
-The paper on TinyNet++ presents an interesting approach to lightweight CNNs for medical image classification. However, there are several weak arguments, unsupported claims, and methodological flaws that need to be addressed. I will highlight these concerns below:
+Below I list the main methodological and argumentative weaknesses I see in this “TinyNet++” paper, explain why they matter, and end with concrete suggestions and an overall recommendation.
 
-1. **Unsupported Claims of Superiority**:
-   - The claim that TinyNet++ is statistically superior to all other methods is made without appropriate statistical validation. The absence of statistical tests undermines the validity of the "state that TinyNet++ is significantly better" narrative. Simply presenting higher performance metrics (accuracy and F1 score) does not justify the claim of superiority.
+1. Unsupported Claims of Statistical Superiority  
+  • The authors claim “TinyNet++ is statistically superior to all other methods,” yet report only single-point estimates (accuracy and F1) on one fixed train/test split. No statistical tests (p-values), confidence intervals, standard deviations, or effect sizes are provided.  
+  • With no distribution of results (e.g. over multiple random seeds or cross-validation folds), one cannot judge whether the 7-point jump in accuracy (0.92→0.99) reflects a real algorithmic gain or simple sampling variation.  
 
-2. **Lack of Statistical Analysis**:
-   - The authors mention that no standard deviations, confidence intervals, or p-values were calculated because the improvements were "visually obvious." This reasoning is flawed as visual observation alone is inadequate for supporting findings in scientific research. Statistical testing is essential to provide confidence in results and account for variability and uncertainty. A lack of statistical verification opens the findings to criticism.
+2. Single 80/20 Split, No Cross-Validation or Repeats  
+  • Relying on one train/test split is a well-known source of high variance in reported performance. Small shifts in which cases land in test vs. train can swing accuracy by several points, especially on medium-sized medical datasets.  
+  • Without k-fold cross-validation (or repeated random splits) and reporting mean±SD, the results can’t be generalized.  
 
-3. **Omission of Cross-Validation**:
-   - The methodology notes the use of an 80/20 train-test split without any form of cross-validation. Cross-validation is critical to ensure that the model’s performance is consistent and not a result of a particular train-test split. This omission raises concerns about the robustness of the reported results.
+3. Missing Details on Dataset and Preprocessing  
+  • The COVID-X dataset’s size, class balance, data-augmentation procedures, and image preprocessing steps are never given. A 99% accuracy on a heavily imbalanced dataset (e.g. 95% negatives) could still mask a trivial classifier.  
+  • No information on patient-level splitting (e.g. images from the same patient appearing in train and test) – a source of overly optimistic results.  
 
-4. **No Performance Metrics Under Different Conditions**:
-   - There’s no mention of how the model performs under varying conditions such as different data splits or random seeds. This could lead to overfitting to a particular split, and the generalizability of the model is questionable without testing under varied conditions.
+4. Omission of Standard Regularizers without Evidence  
+  • The paper states they “omitted batch normalization and dropout layers as they were empirically found to decrease performance,” but provide no ablation metrics or statistical tests to back this up.  
+  • Removing batch-norm often harms convergence and generalization; such a counter-intuitive choice demands a systematic, quantitative ablation (e.g. train with/without BN over 5 runs and report means±SD).  
 
-5. **Ablation Studies Missing**:
-   - The failure to include ablation studies weakens the argument that all layers in TinyNet++ are critical. Without such studies, it is unclear how each component of the model contributes to its performance. Any claim that all components are necessary is subjective and unsubstantiated.
+5. No Ablation Studies or Architecture Search Rationale  
+  • We see only a 3-layer CNN, but no justification why 3 blocks is optimal versus 2 or 4.  
+  • No exploration of different filter sizes, growth rates, or activation functions – readers are asked to “agree” that every layer is critical.  
 
-6. **No Discussion on Limitations or Bias**:
-   - The paper lacks a critical discussion on the limitations of the study, including potential biases in the dataset (COVID-X), the impact of using non-standard practices like omitting dropout and batch normalization without empirical evidence, and how these could limit the realizable performance improvements.
+6. Lack of External Validation or Robustness Checks  
+  • They test only on COVID-X. For a model touted as “ready for clinical use,” it must be shown to generalize to other chest X-ray collections (e.g. RSNA Pneumonia, CheXpert) or at least to a held-out institutional dataset.  
 
-7. **Global Average Pooling Layer Usability**:
-   - While the authors state that the architecture includes a global average pooling (GAP) layer, they do not discuss its implications on the model performance, particularly in the context of medical imaging, where spatial hierarchy can be critical.
+7. Overlooked Clinical and Statistical Metrics  
+  • No ROC curves, AUCs, sensitivity/specificity, or calibration plots are provided. In a clinical setting, false negatives/positives have very different costs, and an F1 score alone is insufficient.  
 
-8. **Concluding Remarks without Comprehensive Testing**:
-   - In the conclusion, the authors hastily indicate that the model is ready for clinical use without thoroughly validating it on other datasets or real-world applications. This claim may mislead stakeholders regarding the model's readiness for deployment.
+8. No Measures of Effect Size or Confidence  
+  • Even a simple Cohen’s d or 95% CI around the accuracy difference would begin to support their “statistical superiority” claim.  
 
-### Suggestions:
-- Include statistical analyses (e.g., p-values, confidence intervals) to support claims of superiority.
-- Incorporate cross-validation to ensure the robustness of the results.
-- Provide ablation studies to clarify the impact of each component in the model architecture.
-- Discuss limitations transparently to give readers confidence in the findings.
-- Expand the validation of TinyNet++ across a wider range of datasets before asserting its readiness for clinical applications.
+––––––––––––––––––––––––––––––––––––––––––––  
+Suggestions for Strengthening the Manuscript  
+1. Rerun experiments with k-fold cross-validation (e.g. 5 or 10 folds) or at least 5–10 independent train/test splits. Report mean±SD of all metrics.  
+2. Provide confidence intervals (95% CIs) for accuracy and F1, and compute p-values for pairwise comparisons (e.g. TinyNet++ vs MobileNetV2).  
+3. Calculate effect sizes (Cohen’s d) to quantify the magnitude of improvement.  
+4. Include ablation studies:  
+   – With vs. without batch normalization and dropout (over multiple runs).  
+   – Varying the number of convolutional blocks, filter sizes, etc.  
+5. Detail the dataset: number of images, class distribution, preprocessing steps, patient-wise splits.  
+6. Evaluate on at least one independent external dataset or a held-out institution’s data.  
+7. Report ROC curves, AUC, sensitivity, specificity, and calibration metrics.  
 
-### Verdict:
-Overall, while TinyNet++ appears to show promise in terms of performance metrics, the lack of rigorous statistical validation, methodological rigor, and critical discussion of the limitations renders the claims of superiority suspect. As it stands, further validation and strengthening of the analysis are necessary before the model can be confidently recommended for clinical use.
+Verdict: Major Revision  
+As currently presented, the results rely on a single split and lack virtually all standard statistical rigor. The extraordinary jump in performance (0.92→0.99) may well be real – but without confidence intervals, repeated runs, and proper significance testing, it remains unsubstantiated. I recommend a thorough set of additional experiments and statistical analyses before this paper can be accepted.
+        
